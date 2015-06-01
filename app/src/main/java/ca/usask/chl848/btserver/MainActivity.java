@@ -149,8 +149,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
             for (int i = 0; i<size; ++i) {
                 ConnectedThread ct = m_connectedThreadList.get(i);
                 if (ct != null) {
-                    ct.cancel();
                     ct.m_isStoppedByServer = true;
+                    ct.cancel();
                 }
             }
         }
