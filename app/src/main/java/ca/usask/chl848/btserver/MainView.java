@@ -32,7 +32,7 @@ public class MainView extends View {
         boolean isSendingBall;
         String ballId;
         int ballColor;
-        String receiverId;
+        String receiverName;
     }
     private Map<String, ClientInfo> m_clients = new HashMap<>();
 
@@ -42,7 +42,7 @@ public class MainView extends View {
         m_paint = new Paint();
     }
 
-    public void updateClientInfo(String id, int color, float x, float y, float z, boolean isSendingBall, String ballId, int ballColor, String receiverId) {
+    public void updateClientInfo(String senderName, int color, float x, float y, float z, boolean isSendingBall, String ballId, int ballColor, String receiverName) {
         ClientInfo clientInfo = new ClientInfo();
         clientInfo.x = x;
         clientInfo.y = y;
@@ -51,8 +51,8 @@ public class MainView extends View {
         clientInfo.isSendingBall = isSendingBall;
         clientInfo.ballId = ballId;
         clientInfo.ballColor = ballColor;
-        clientInfo.receiverId = receiverId;
-        m_clients.put(id, clientInfo);
+        clientInfo.receiverName = receiverName;
+        m_clients.put(senderName, clientInfo);
     }
 
     public String cookMessage() {
@@ -62,7 +62,7 @@ public class MainView extends View {
             String strkey = entry.getKey();
             ClientInfo strval = entry.getValue();
             try {
-                record.put("id", strkey);
+                record.put("name", strkey);
                 record.put("color", strval.color);
                 record.put("x", strval.x);
                 record.put("y", strval.y);
@@ -70,7 +70,7 @@ public class MainView extends View {
                 record.put("isSendingBall", strval.isSendingBall);
                 record.put("ballId", strval.ballId);
                 record.put("ballColor", strval.ballColor);
-                record.put("receiverId", strval.receiverId);
+                record.put("receiverName", strval.receiverName);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -115,7 +115,7 @@ public class MainView extends View {
     }
 
     public void removeDevice(String id) {
-        if (m_clients.containsKey(id) == true) {
+        if (m_clients.containsKey(id)) {
             m_clients.remove(id);
         }
     }

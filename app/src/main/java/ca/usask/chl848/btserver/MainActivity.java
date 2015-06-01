@@ -30,7 +30,6 @@ import java.util.UUID;
 public class MainActivity extends Activity implements View.OnClickListener {
 
     private MainView m_mainView;
-    //private int m_mainViewId;
 
     private ServerThread m_serverThread = null;
     private ArrayList<ConnectedThread> m_connectedThreadList = new ArrayList<>();
@@ -42,16 +41,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     private UUID m_UUID = UUID.fromString("8bb345b0-712a-400a-8f47-6a4bda472638");
 
-    private ArrayList<InputStream> m_inStreamList = new ArrayList<>();
-    private ArrayList<OutputStream> m_outStreamList = new ArrayList<>();
-
     private static int REQUEST_ENABLE_BLUETOOTH = 1;
 
     private ArrayList m_messageList = new ArrayList();
-
-    private boolean m_isConnected;
-
-    private int m_connection_count;
 
     private boolean m_isOn;
 
@@ -77,7 +69,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
         setContentView(R.layout.activity_main);
 
         setStatus("");
-        m_connection_count = 0;
 
         Button btn=(Button)this.findViewById(R.id.btn_switch);
         btn.setOnClickListener(this);
@@ -171,14 +162,13 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 setStatus("Not Connected");
             }
         });
-        //setStatus("Not Connected");
         m_isOn = false;
     }
 
     @Override
     public void onClick(View v) {
         Button btn=(Button)this.findViewById(R.id.btn_switch);
-        if (m_isOn == false) {
+        if (!m_isOn) {
             setupBluetooth();
             m_isOn = true;
             btn.setText("Stop Server");
@@ -196,7 +186,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     private void setupBluetooth(){
         setStatus("Not Connected");
-        m_isConnected = false;
 
         m_bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
@@ -248,11 +237,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 m_inStream = m_connectedSocket.getInputStream();
                 m_outStream = m_connectedSocket.getOutputStream();
                 m_deviceName = "";
-                //setStatus("Connected");
-                m_isConnected = true;
                 m_isStoppedByServer = false;
             } catch (IOException e){
-
+                e.printStackTrace();
             }
         }
 
@@ -273,14 +260,14 @@ public class MainActivity extends Activity implements View.OnClickListener {
                             buf_data[i] = buffer[i];
                         }
                         String msg = new String(buf_data);
-                        String id = receiveBTMessage(msg);
+                        String name = receiveBTMessage(msg);
                         if (m_deviceName.equalsIgnoreCase("")) {
-                            m_deviceName = id;
+                            m_deviceName = name;
                         }
                     }
                 } catch (IOException e) {
                     cancel();
-                    if (m_isStoppedByServer == false) {
+                    if (!m_isStoppedByServer) {
                         m_connectedThreadList.remove(this);
                     }
                     m_mainView.removeDevice(m_deviceName);
@@ -299,9 +286,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
                             }
                         });
                     }
-                    //setStatus("Not Connected");
-                    //m_isConnected = false;
-                    m_connection_count--;
                     break;
                 }
             }
@@ -313,7 +297,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     m_outStream.write(msg.getBytes());
                 }
             } catch (IOException e) {
-
+                e.printStackTrace();
             }
         }
 
@@ -398,6 +382,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     m_serverSocket.close();
                 }
             } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -429,34 +414,30 @@ public class MainActivity extends Activity implements View.OnClickListener {
         try {
             JSONObject jsonObject = new JSONObject(msg);
 
-            String id = jsonObject.getString("id");
+            String senderName = jsonObject.getString("name");
             float senderX = (float) jsonObject.getDouble("x");
             float senderY = (float) jsonObject.getDouble("y");
             float senderZ = (float) jsonObject.getDouble("z");
             int color = jsonObject.getInt("color");
 
-            String receiverId = "";
+            String receiverName = "";
             String ballId = "";
             int ballColor = 0;
 
             boolean isSendingBall = jsonObject.getBoolean("isSendingBall");
-            if (isSendingBall == true) {
-                receiverId = jsonObject.getString("receiverId");
+            if (isSendingBall) {
+                receiverName = jsonObject.getString("receiverName");
                 ballId = jsonObject.getString("ballId");
                 ballColor = jsonObject.getInt("ballColor");
             }
 
-            m_mainView.updateClientInfo(id, color, senderX, senderY, senderZ, isSendingBall, ballId, ballColor, receiverId);
+            m_mainView.updateClientInfo(senderName, color, senderX, senderY, senderZ, isSendingBall, ballId, ballColor, receiverName);
 
-            rt = id;
+            rt = senderName;
         }catch (JSONException e) {
             e.printStackTrace();
         }
 
         return rt;
-    }
-
-    public boolean isConnected(){
-        return m_isConnected;
     }
 }
