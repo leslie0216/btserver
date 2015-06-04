@@ -8,7 +8,9 @@ import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.util.DisplayMetrics;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -61,6 +63,18 @@ public class MainActivity extends Activity implements View.OnClickListener {
             sendMessage();
             timerHandler.postDelayed(this, 500);
         }
+    };
+
+    private static boolean m_isExit = false;
+
+    Handler m_exitHandler = new Handler() {
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            m_isExit = false;
+        }
+
     };
 
     @Override
@@ -132,6 +146,27 @@ public class MainActivity extends Activity implements View.OnClickListener {
         m_isOn = false;
         stopThreads();
         super.onDestroy();
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            exit();
+            return false;
+        } else {
+            return super.onKeyDown(keyCode, event);
+        }
+    }
+
+    private void exit() {
+        if (!m_isExit) {
+            m_isExit = true;
+            Toast.makeText(getApplicationContext(), "press back key again to exit", Toast.LENGTH_SHORT).show();
+            m_exitHandler.sendEmptyMessageDelayed(0, 2000);
+        } else {
+            finish();
+            System.exit(0);
+        }
     }
 
     private void stopThreads() {
