@@ -213,8 +213,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
             if (m_isLog && m_logger == null) {
                 m_logger = new MainLogger(this, "NFC_log");
 
-                //<senderID> <condition> <block#> <trial#> <receiverName> <actualReceiverName> <isCorrect> <transactionId> <timestamp>
-                m_logger.writeHeaders("senderId" + "," + "condition" + "," + "block" + "," + "trial" + "," + "receiverName" + "," + "actualReceiverName" + "," + "isCorrect" + "," + "transactionId" + "," + "timestamp");
+                //<senderID> <senderName> <condition> <block#> <trial#> <receiverName> <actualReceiverName> <isCorrect> <transactionId> <timestamp>
+                m_logger.writeHeaders("senderId" + "," + "senderName" + "," + "condition" + "," + "block" + "," + "trial" + "," + "receiverName" + "," + "actualReceiverName" + "," + "isCorrect" + "," + "transactionId" + "," + "timestamp");
             }
             btn.setText("Stop Server");
         } else {
@@ -474,7 +474,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 String transactionId = jsonObject.getString("transactionId");
                 String isCorrect = jsonObject.getString("isCorrect");
 
-                //<senderID> <condition> <block#> <trial#> <receiverName> <actualReceiverName> <isCorrect> <transactionId> <timestamp>
+                //<senderID> <senderName> <condition> <block#> <trial#> <receiverName> <actualReceiverName> <isCorrect> <transactionId> <timestamp>
                 if (m_logger != null) {
                     m_logger.write(senderId + "," + senderName + "," + "Tap" + "," + blockId + "," + trialId + "," + receiverName + "," + actualReceiverName + "," + isCorrect + "," + transactionId + "," + System.currentTimeMillis(), true);
                 }
