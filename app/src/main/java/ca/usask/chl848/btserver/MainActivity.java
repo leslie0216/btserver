@@ -67,10 +67,17 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
     };
 
+    private MainLogger m_logger;
+    private boolean m_isLog;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Intent intent = this.getIntent();
+        Bundle bundle = intent.getExtras();
+        m_isLog = bundle.getBoolean("log");
 
         setStatus("");
 
@@ -135,6 +142,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
     protected void onDestroy() {
         m_isOn = false;
         stopThreads();
+        if (m_logger != null) {
+            m_logger.close();
+        }
         super.onDestroy();
     }
 
@@ -200,8 +210,18 @@ public class MainActivity extends Activity implements View.OnClickListener {
         if (!m_isOn) {
             setupBluetooth();
             m_isOn = true;
+            if (m_isLog && m_logger == null) {
+                m_logger = new MainLogger(this, "NFC_log");
+
+                //<senderID> <condition> <block#> <trial#> <receiverName> <actualReceiverName> <isCorrect> <transactionId> <timestamp>
+                m_logger.writeHeaders("senderId" + "," + "condition" + "," + "block" + "," + "trial" + "," + "receiverName" + "," + "actualReceiverName" + "," + "isCorrect" + "," + "transactionId" + "," + "timestamp");
+            }
             btn.setText("Stop Server");
         } else {
+            if (m_logger != null) {
+                m_logger.close();
+                m_logger = null;
+            }
             stopThreads();
             m_isOn = false;
             btn.setText("Start Server");
@@ -443,26 +463,43 @@ public class MainActivity extends Activity implements View.OnClickListener {
         try {
             JSONObject jsonObject = new JSONObject(msg);
 
-            String senderName = jsonObject.getString("name");
-            float senderX = (float) jsonObject.getDouble("x");
-            float senderY = (float) jsonObject.getDouble("y");
-            float senderZ = (float) jsonObject.getDouble("z");
-            int color = jsonObject.getInt("color");
+            if (jsonObject.has("NFCLog") && jsonObject.getBoolean("NFCLog")) {
 
-            String receiverName = "";
-            String ballId = "";
-            int ballColor = 0;
+                String senderId = jsonObject.getString("senderId");
+                String senderName = jsonObject.getString("senderName");
+                String receiverName = jsonObject.getString("receiverName");
+                String actualReceiverName = jsonObject.getString("actualReceiverName");
+                int blockId = jsonObject.getInt("blockId");
+                int trialId = jsonObject.getInt("trialId");
+                String transactionId = jsonObject.getString("transactionId");
+                String isCorrect = jsonObject.getString("isCorrect");
 
-            boolean isSendingBall = jsonObject.getBoolean("isSendingBall");
-            if (isSendingBall) {
-                receiverName = jsonObject.getString("receiverName");
-                ballId = jsonObject.getString("ballId");
-                ballColor = jsonObject.getInt("ballColor");
+                //<senderID> <condition> <block#> <trial#> <receiverName> <actualReceiverName> <isCorrect> <transactionId> <timestamp>
+                if (m_logger != null) {
+                    m_logger.write(senderId + "," + senderName + "," + "Tap" + "," + blockId + "," + trialId + "," + receiverName + "," + actualReceiverName + "," + isCorrect + "," + transactionId + "," + System.currentTimeMillis(), true);
+                }
+            } else {
+                String senderName = jsonObject.getString("name");
+                float senderX = (float) jsonObject.getDouble("x");
+                float senderY = (float) jsonObject.getDouble("y");
+                float senderZ = (float) jsonObject.getDouble("z");
+                int color = jsonObject.getInt("color");
+
+                String receiverName = "";
+                String ballId = "";
+                int ballColor = 0;
+
+                boolean isSendingBall = jsonObject.getBoolean("isSendingBall");
+                if (isSendingBall) {
+                    receiverName = jsonObject.getString("receiverName");
+                    ballId = jsonObject.getString("ballId");
+                    ballColor = jsonObject.getInt("ballColor");
+                }
+
+                m_mainView.updateClientInfo(senderName, color, senderX, senderY, senderZ, isSendingBall, ballId, ballColor, receiverName);
+
+                rt = senderName;
             }
-
-            m_mainView.updateClientInfo(senderName, color, senderX, senderY, senderZ, isSendingBall, ballId, ballColor, receiverName);
-
-            rt = senderName;
         }catch (JSONException e) {
             e.printStackTrace();
         }
